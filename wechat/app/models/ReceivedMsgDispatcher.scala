@@ -13,7 +13,7 @@ abstract class ReceivedMsg {
   @BeanProperty
   var msgType: String = _
   @BeanProperty
-  var msgId: Int = _
+  var msgId: Long = _
 
   def parse: PartialFunction[scala.xml.Node, Unit] = {
     case <ToUserName>{ content }</ToUserName> =>
@@ -25,23 +25,7 @@ abstract class ReceivedMsg {
     case <MsgType>{ content }</MsgType> =>
       setMsgType(content.text)
     case <MsgId>{ content }</MsgId> =>
-      setMsgId(content.text.toInt)
-  }
-
-}
-
-trait ReceivedMsgFromXml {
-
-  def fromXml: PartialFunction[scala.xml.Node, ReceivedMsg]
-
-}
-
-object ReceivedMsg {
-
-  def fromXml[T >: ReceivedMsg](xml: scala.xml.Node): T = {
-    val fun = ReceivedTextMsg.fromXml.orElse(ReceivedImageMsg.fromXml).orElse(ReceivedLocationMsg.fromXml)
-    		.orElse(ReceivedLinkMsg.fromXml).orElse(ReceivedEventMsg.fromXml)
-    fun(xml)
+      setMsgId(content.text.toLong)
   }
 
 }
@@ -60,20 +44,6 @@ class ReceivedTextMsg extends ReceivedMsg {
 
 }
 
-object ReceivedTextMsg extends ReceivedMsgFromXml {
-
-  override def fromXml: PartialFunction[scala.xml.Node, ReceivedTextMsg] = {
-    xml =>
-      (xml \\ "MsgType" headOption).map(_.text).get match {
-        case "text" =>
-          val msg: ReceivedTextMsg = new ReceivedTextMsg
-          xml.foreach(n => msg.parse(n))
-          msg
-      }
-  }
-
-}
-
 class ReceivedImageMsg extends ReceivedMsg {
 
   @BeanProperty
@@ -85,20 +55,6 @@ class ReceivedImageMsg extends ReceivedMsg {
         setPicUrl(content.text)
     })
   }
-}
-
-object ReceivedImageMsg extends ReceivedMsgFromXml {
-
-  override def fromXml: PartialFunction[scala.xml.Node, ReceivedImageMsg] = {
-    xml =>
-      (xml \\ "MsgType" headOption).map(_.text).get match {
-        case "image" =>
-          val msg: ReceivedImageMsg = new ReceivedImageMsg
-          xml.foreach(n => msg.parse(n))
-          msg
-      }
-  }
-
 }
 
 class ReceivedLocationMsg extends ReceivedMsg {
@@ -127,20 +83,6 @@ class ReceivedLocationMsg extends ReceivedMsg {
 
 }
 
-object ReceivedLocationMsg extends ReceivedMsgFromXml {
-
-  override def fromXml: PartialFunction[scala.xml.Node, ReceivedLocationMsg] = {
-    xml =>
-      (xml \\ "MsgType" headOption).map(_.text).get match {
-        case "location" =>
-          val msg: ReceivedLocationMsg = new ReceivedLocationMsg
-          xml.foreach(msg.parse)
-          msg
-      }
-  }
-
-}
-
 class ReceivedLinkMsg extends ReceivedMsg {
 
   @BeanProperty
@@ -163,20 +105,6 @@ class ReceivedLinkMsg extends ReceivedMsg {
 
 }
 
-object ReceivedLinkMsg extends ReceivedMsgFromXml {
-
-  override def fromXml: PartialFunction[scala.xml.Node, ReceivedLinkMsg] = {
-    xml =>
-      (xml \\ "MsgType" headOption).map(_.text).get match {
-        case "link" =>
-          val msg: ReceivedLinkMsg = new ReceivedLinkMsg
-          xml.foreach(msg.parse)
-          msg
-      }
-  }
-
-}
-
 class ReceivedEventMsg extends ReceivedMsg {
 
   @BeanProperty
@@ -195,18 +123,18 @@ class ReceivedEventMsg extends ReceivedMsg {
 
 }
 
-object ReceivedEventMsg extends ReceivedMsgFromXml {
+object ReceivedMsgDispatcher {
 
-  override def fromXml: PartialFunction[scala.xml.Node, ReceivedEventMsg] = {
-    xml =>
-      (xml \\ "MsgType" headOption).map(_.text).get match {
-        case "event" =>
-          val msg: ReceivedEventMsg = new ReceivedEventMsg
-          xml.foreach(msg.parse)
-          msg
+  def fromXml[T >: ReceivedMsg](xml: scala.xml.Node): T = {
+      val msg = (xml \\ "MsgType" headOption).map(_.text).get match {
+        case "text" => new ReceivedTextMsg
+        case "image" => new ReceivedImageMsg
+        case "location" => new ReceivedLocationMsg
+        case "link" => new ReceivedLinkMsg
+        case "event" => new ReceivedEventMsg
       }
+      xml.child.filter(_.isInstanceOf[scala.xml.Elem]).foreach(n => msg.parse(n))
+      msg
   }
 
 }
-
-
