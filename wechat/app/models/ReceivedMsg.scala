@@ -1,6 +1,7 @@
 package models
 
 import scala.beans.BeanProperty
+import org.joda.time.DateTime
 
 abstract class ReceivedMsg {
 
@@ -9,7 +10,7 @@ abstract class ReceivedMsg {
   @BeanProperty
   var fromUserName: String = _
   @BeanProperty
-  var createTime: Long = _
+  var createTime: DateTime = _
   @BeanProperty
   var msgType: String = _
   @BeanProperty
@@ -21,7 +22,7 @@ abstract class ReceivedMsg {
     case <FromUserName>{ content }</FromUserName> =>
       setFromUserName(content.text)
     case <CreateTime>{ content }</CreateTime> =>
-      setCreateTime(content.text.toLong)
+      setCreateTime(new DateTime(content.text.toLong))
     case <MsgType>{ content }</MsgType> =>
       setMsgType(content.text)
     case <MsgId>{ content }</MsgId> =>
