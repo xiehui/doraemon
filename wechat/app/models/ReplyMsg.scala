@@ -1,6 +1,7 @@
 package models
 
 import scala.beans.BeanProperty
+
 import org.joda.time.DateTime
 
 abstract class ReplyMsg {
@@ -11,20 +12,27 @@ abstract class ReplyMsg {
   var fromUserName: String = _
   @BeanProperty
   var createTime: DateTime = _
-  @BeanProperty
-  var msgType: String = _
+  def msgType: String
   @BeanProperty
   var funcFlag: Int = _
 
   def toXml: scala.xml.Node
+  
+  def flush(received: ReceivedMsg) {
+    toUserName = received.getFromUserName
+    fromUserName = received.getToUserName
+    createTime = DateTime.now
+  }
 
 }
 
 class ReplyTextMsg extends ReplyMsg {
 
+  override def msgType = "text"
+    
   @BeanProperty
   var content: String = _
-
+  
   override def toXml =
     <xml>
       <ToUserName>{ toUserName }</ToUserName>
@@ -39,6 +47,8 @@ class ReplyTextMsg extends ReplyMsg {
 
 class ReplyMusicMsg extends ReplyMsg {
 
+  override def msgType = "music"
+    
   @BeanProperty
   var music: Music = _
 
@@ -81,6 +91,8 @@ class Music {
  */
 class ReplyNewsMsg extends ReplyMsg {
 
+  override def msgType = "news"
+    
   @BeanProperty
   var articles: List[Article] = _
 

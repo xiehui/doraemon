@@ -31,7 +31,7 @@ abstract class ReceivedMsg {
 
 }
 
-class ReceivedTextMsg extends ReceivedMsg {
+case class ReceivedTextMsg() extends ReceivedMsg {
 
   @BeanProperty
   var content: String = _
@@ -45,7 +45,7 @@ class ReceivedTextMsg extends ReceivedMsg {
 
 }
 
-class ReceivedImageMsg extends ReceivedMsg {
+case class ReceivedImageMsg() extends ReceivedMsg {
 
   @BeanProperty
   var picUrl: String = _
@@ -58,7 +58,7 @@ class ReceivedImageMsg extends ReceivedMsg {
   }
 }
 
-class ReceivedLocationMsg extends ReceivedMsg {
+case class ReceivedLocationMsg() extends ReceivedMsg {
 
   @BeanProperty
   var locationX: Double = _
@@ -84,7 +84,7 @@ class ReceivedLocationMsg extends ReceivedMsg {
 
 }
 
-class ReceivedLinkMsg extends ReceivedMsg {
+case class ReceivedLinkMsg() extends ReceivedMsg {
 
   @BeanProperty
   var title: String = _
@@ -106,7 +106,7 @@ class ReceivedLinkMsg extends ReceivedMsg {
 
 }
 
-class ReceivedEventMsg extends ReceivedMsg {
+case class ReceivedEventMsg() extends ReceivedMsg {
 
   @BeanProperty
   var event: String = _
@@ -128,11 +128,11 @@ object ReceivedMsgDispatcher {
 
   def fromXml[T >: ReceivedMsg](xml: scala.xml.Node): T = {
       val msg = (xml \\ "MsgType" headOption).map(_.text).get match {
-        case "text" => new ReceivedTextMsg
-        case "image" => new ReceivedImageMsg
-        case "location" => new ReceivedLocationMsg
-        case "link" => new ReceivedLinkMsg
-        case "event" => new ReceivedEventMsg
+        case "text" => ReceivedTextMsg()
+        case "image" => ReceivedImageMsg()
+        case "location" => ReceivedLocationMsg()
+        case "link" => ReceivedLinkMsg()
+        case "event" => ReceivedEventMsg()
       }
       xml.child.filter(_.isInstanceOf[scala.xml.Elem]).foreach(n => msg.parse(n))
       msg
